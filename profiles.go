@@ -1,8 +1,8 @@
 // Package tlsprofiles holds the TLS client profiles that reproduce the handshakes
 // of iOS apps built with Akamai's Bot Manager Premier SDK, for use with
 // github.com/bogdanfinn/tls-client. Two handshake families exist, Standard and
-// Secondary, each in three variants keyed on the iOS version reported by the
-// Roolink sensor response. profiles.json carries the same six profiles as
+// Secondary, in variants keyed on the iOS version reported by the Roolink
+// sensor response. profiles.json carries the same profiles as
 // custom-client definitions for the Python and Node wrappers.
 package tlsprofiles
 
@@ -13,6 +13,110 @@ import (
 )
 
 var (
+	// StandardIOS27 is the Standard handshake for iOS 27: StandardIOS26_2 without TLS_AES_128_GCM_SHA256.
+	// JA4 t13d1213h2_d893ac74c21d_7f0f34a4126d.
+	StandardIOS27 = profiles.NewClientProfile(
+		tls.ClientHelloID{
+			Client:               "StandardIOS",
+			RandomExtensionOrder: false,
+			Version:              "1.0.0",
+			Seed:                 nil,
+			SpecFactory: func() (tls.ClientHelloSpec, error) {
+				clientHello := tls.ClientHelloSpec{
+					CipherSuites: []uint16{
+						tls.GREASE_PLACEHOLDER,
+						0x1302,
+						0x1303,
+						0xc02c,
+						0xc030,
+						0xc02b,
+						0xcca9,
+						0xc02f,
+						0xcca8,
+						0xc00a,
+						0xc009,
+						0xc014,
+						0xc013,
+					},
+					CompressionMethods: []uint8{tls.CompressionNone},
+					Extensions: []tls.TLSExtension{
+						&tls.UtlsGREASEExtension{},
+						&tls.SNIExtension{},
+						&tls.ExtendedMasterSecretExtension{},
+						&tls.RenegotiationInfoExtension{Renegotiation: tls.RenegotiateOnceAsClient},
+						&tls.SupportedCurvesExtension{Curves: []tls.CurveID{
+							tls.CurveID(tls.GREASE_PLACEHOLDER),
+							0x11ec,
+							0x001d,
+							0x0017,
+							0x0018,
+							0x0019,
+						}},
+						&tls.SupportedPointsExtension{SupportedPoints: []byte{
+							tls.PointFormatUncompressed,
+						}},
+						&tls.ALPNExtension{AlpnProtocols: []string{"h2", "http/1.1"}},
+						&tls.StatusRequestExtension{},
+						&tls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: []tls.SignatureScheme{
+							0x0403,
+							0x0804,
+							0x0401,
+							0x0503,
+							0x0805,
+							0x0805,
+							0x0501,
+							0x0806,
+							0x0601,
+							0x0201,
+						}},
+						&tls.SCTExtension{},
+						&tls.KeyShareExtension{KeyShares: []tls.KeyShare{
+							{Group: tls.CurveID(tls.GREASE_PLACEHOLDER), Data: []byte{0}},
+							{Group: tls.X25519MLKEM768},
+							{Group: tls.X25519},
+						}},
+						&tls.PSKKeyExchangeModesExtension{Modes: []uint8{
+							tls.PskModeDHE,
+						}},
+						&tls.SupportedVersionsExtension{Versions: []uint16{
+							tls.GREASE_PLACEHOLDER,
+							tls.VersionTLS13,
+							tls.VersionTLS12,
+						}},
+						&tls.UtlsCompressCertExtension{Algorithms: []tls.CertCompressionAlgo{
+							tls.CertCompressionZlib,
+						}},
+						&tls.UtlsGREASEExtension{},
+						&tls.UtlsPaddingExtension{GetPaddingLen: tls.BoringPaddingStyle},
+					},
+				}
+				return clientHello, nil
+			},
+			Weights: &tls.Weights{},
+		},
+		map[http2.SettingID]uint32{
+			http2.SettingEnablePush:           0,
+			http2.SettingMaxConcurrentStreams: 100,
+			http2.SettingInitialWindowSize:    2097152,
+			9:                                 1,
+		},
+		[]http2.SettingID{
+			http2.SettingEnablePush,
+			http2.SettingInitialWindowSize,
+			http2.SettingMaxConcurrentStreams,
+			9,
+		},
+		[]string{
+			":method",
+			":scheme",
+			":path",
+			":authority",
+		},
+		uint32(10485760),
+		[]http2.Priority{},
+		&http2.PriorityParam{},
+		0, false, nil, nil, 0, nil, false,
+	)
 	// StandardIOS26_2 is the Standard handshake for iOS 26.2 and later: the first profile to try.
 	// JA4 t13d1313h2_f57a46bbacb6_7f0f34a4126d.
 	StandardIOS26_2 = profiles.NewClientProfile(
