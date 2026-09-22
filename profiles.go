@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	// StandardIOS27 is the Standard handshake for iOS 27: StandardIOS26_2 without TLS_AES_128_GCM_SHA256.
+	// StandardIOS27 is the Standard handshake for iOS 27: StandardIOS26_2 with TLS_AES_128_GCM_SHA256 offered last of the TLS 1.3 suites.
 	// JA4 t13d1213h2_d893ac74c21d_7f0f34a4126d.
 	StandardIOS27 = profiles.NewClientProfile(
 		tls.ClientHelloID{
@@ -27,6 +27,7 @@ var (
 						tls.GREASE_PLACEHOLDER,
 						0x1302,
 						0x1303,
+						0x1301,
 						0xc02c,
 						0xc030,
 						0xc02b,
