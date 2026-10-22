@@ -11,21 +11,21 @@ The same seven profiles ship in two forms:
 
 iOS apps on Akamai's SDK connect with one of two handshake families, **Standard** and **Secondary**. The handshake also changes between iOS releases, so each family has variants keyed on the `ios` version in the Roolink sensor response.
 
-| `ios` in the response | Standard | Secondary |
-| --- | --- | --- |
-| 27 and later | `StandardIOS27` | `SecondaryIOS26_2` |
-| 26.2 to 26.x | `StandardIOS26_2` | `SecondaryIOS26_2` |
-| 26.0 and 26.1 | `StandardIOS26` | `SecondaryIOS26` |
-| Older | `StandardIOS` | `SecondaryIOS` |
+| `ios` in the response | Standard          | Secondary          |
+| --------------------- | ----------------- | ------------------ |
+| 27 and later          | `StandardIOS27`   | `SecondaryIOS26_2` |
+| 26.2 to 26.x          | `StandardIOS26_2` | `SecondaryIOS26_2` |
+| 26.0 and 26.1         | `StandardIOS26`   | `SecondaryIOS26`   |
+| Older                 | `StandardIOS`     | `SecondaryIOS`     |
 
 Start with Standard. If the app refuses the session although the sensor is fresh and the cookies are set, switch to Secondary. Note which one an app accepts.
 
-| Profile | JA4 | HTTP/2 |
-| --- | --- | --- |
-| `StandardIOS27` | `t13d1313h2_f57a46bbacb6_7f0f34a4126d` | `2:0;4:2097152;3:100;9:1\|10485760\|0\|m,s,p,a` |
-| `StandardIOS26_2`, `StandardIOS26` | `t13d1313h2_f57a46bbacb6_7f0f34a4126d` | `2:0;4:2097152;3:100;9:1\|10485760\|0\|m,s,p,a` |
+| Profile                                              | JA4                                    | HTTP/2                                                                                |
+| ---------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------- |
+| `StandardIOS27`                                      | `t13d1313h2_f57a46bbacb6_7f0f34a4126d` | `2:0;4:2097152;3:100;9:1\|10485760\|0\|m,s,p,a`                                       |
+| `StandardIOS26_2`, `StandardIOS26`                   | `t13d1313h2_f57a46bbacb6_7f0f34a4126d` | `2:0;4:2097152;3:100;9:1\|10485760\|0\|m,s,p,a`                                       |
 | `SecondaryIOS26_2`, `SecondaryIOS26`, `SecondaryIOS` | `t13d2013h2_a09f3c656075_7f0f34a4126d` | Secondary 26.x: as above. `SecondaryIOS`: `2:0;4:2097152;3:100\|10485760\|0\|m,s,p,a` |
-| `StandardIOS` | `t13d1314h2_f57a46bbacb6_e42f34c56612` | `2:0;4:2097152;3:100\|10485760\|0\|m,s,p,a` |
+| `StandardIOS`                                        | `t13d1314h2_f57a46bbacb6_e42f34c56612` | `2:0;4:2097152;3:100\|10485760\|0\|m,s,p,a`                                           |
 
 Standard and Secondary differ in cipher-suite order and count (Secondary adds the legacy TLS 1.2 suites), in the TLS versions offered, and in whether a padding extension is present. `StandardIOS27` is `StandardIOS26_2` with the TLS 1.3 suites reordered to `TLS_AES_256_GCM_SHA384`, `TLS_CHACHA20_POLY1305_SHA256`, `TLS_AES_128_GCM_SHA256`, as captured from an iPhone 17 Pro on iOS 27.0, so it shares `StandardIOS26_2`'s JA4 and differs in JA3; no separate iOS 27 Secondary handshake has been captured, so Secondary apps stay on `SecondaryIOS26_2`. The 26.x and 27 variants add the X25519MLKEM768 key share and the `NO_RFC7540_PRIORITIES` HTTP/2 setting that older iOS releases do not send.
 
@@ -51,11 +51,11 @@ Built against tls-client v1.16.0 and utls v1.7.8-barnius. Keep the same profile 
 
 Each entry of `profiles.json` is one profile with the keys the shared library's `customTlsClient` payload takes:
 
-| Key | What it holds |
-| --- | --- |
-| `ja3String` | Cipher suites, extensions in order, curves and point formats. GREASE placeholders are `2570`. |
-| `supportedSignatureAlgorithms`, `supportedVersions`, `keyShareCurves`, `certCompressionAlgos`, `alpnProtocols` | The extension contents the JA3 string cannot carry. |
-| `h2Settings`, `h2SettingsOrder`, `pseudoHeaderOrder`, `connectionFlow` | The HTTP/2 SETTINGS frame, its order, the pseudo-header order and the connection window. `UNKNOWN_SETTING_9` is `NO_RFC7540_PRIORITIES`. |
+| Key                                                                                                            | What it holds                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `ja3String`                                                                                                    | Cipher suites, extensions in order, curves and point formats. GREASE placeholders are `2570`.                                            |
+| `supportedSignatureAlgorithms`, `supportedVersions`, `keyShareCurves`, `certCompressionAlgos`, `alpnProtocols` | The extension contents the JA3 string cannot carry.                                                                                      |
+| `h2Settings`, `h2SettingsOrder`, `pseudoHeaderOrder`, `connectionFlow`                                         | The HTTP/2 SETTINGS frame, its order, the pseudo-header order and the connection window. `UNKNOWN_SETTING_9` is `NO_RFC7540_PRIORITIES`. |
 
 Node passes an entry straight through as `customTlsClient`, with `withRandomTLSExtensionOrder: false` and `disableHttp3: true`. Python needs a small `Session` subclass because the wrapper's custom-client payload predates the current shared library; the Roolink docs show it in full.
 
